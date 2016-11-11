@@ -1,0 +1,9 @@
+a) A description of the procedure you used to obtain the secret:
+
+b) A list of cryptographic algorithms that were used for this TLS connection. For
+each algorithm, describe in one sentence its use in the protocol:
+
+c) A discussion of whether there was any technical way by which you could have
+been prevented from decrypting the conversation even though you have obtained
+the private key. If so, briefly describe the technical approach. If not,
+explain why no such approach is feasible:

@@ -1,0 +1,6 @@
+a) A description of the procedure you used to obtain the secret:
+
+b) The line number of the line in the original generate_rsa_pair.c that doesn’t
+do what the comment above the line states. Discuss whether or not (and why)
+fixing this line so it does what the comment says it should will make this key
+generation scheme be secure:

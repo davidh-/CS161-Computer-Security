@@ -1,0 +1,6 @@
+a) A description of the procedure you used to obtain the secret:
+
+b) A discussion of whether there are any mechanisms or protocols Governor could
+have used to defend himself against your attack. If so, explain why your attack
+wouldn’t work when using these. If not, discuss the implications of this attack
+for the use of TLS in the Internet today:
