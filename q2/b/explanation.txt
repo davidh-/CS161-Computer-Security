@@ -1,6 +1,14 @@
 a) A description of the procedure you used to obtain the secret:
-
+	We noticed the prng seed was not actually incorporating the current time as the comments indicated.
+	As a result, the seed was one of ~7813 options which is well within our ability to brute force. So 
+	we changed the generator script to take in a value for the seed, and tried all possible to see which
+	generated the pair with the public key Neo gave us. After obtaining the private key, we listend on eth1
+	for packets sent to us by the wiretap and used the private key to decrypt their chat. Once in plaintext, 
+	the secret was trivial to determine.
 b) The line number of the line in the original generate_rsa_pair.c that doesn’t
 do what the comment above the line states. Discuss whether or not (and why)
 fixing this line so it does what the comment says it should will make this key
 generation scheme be secure:
+	Line 147: seed = time_micro_sec >> 7;
+	Fixing this line would not satisfy secure pRnG. It would increase entropy, but it is still deterministic and 
+	pretty simple to guess.
