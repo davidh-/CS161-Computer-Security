@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 def manipulate(client_ip,client_port,server_ip,server_port,http_request):
-  http_request = http_request.replace("false", "true ")
+  http_request = http_request.replace("emergency_kill=false", "emergency_kill=true ")
   return http_request
 
 ################################################################################
