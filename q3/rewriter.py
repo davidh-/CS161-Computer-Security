@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 def manipulate(client_ip,client_port,server_ip,server_port,http_request):
-  print(http_request)
   http_request = http_request.replace("false", "true ")
   return http_request
 
