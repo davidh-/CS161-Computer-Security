@@ -1,10 +1,19 @@
 a) A description of the procedure you used to obtain the secret:
+	Attack without rewrite_cn: We noticed the parser looked for a / to indicate the end of the CN, and the CA would sign
+		a cert that contained that after the real site's CN as long as it ended with .neocal.info. So we created a CSR 
+		take advantage of this. All that was left to see the secret was have rewriter.py print the html request.
+	Attack with rewrite_cn: strcmp ends if it hits a null terminator. So we used the same idea as above but used
+		the rewrite script to insert a null terminator into the CN.
 
 b) A discussion of what, if anything, gov-of-caltopia.info can do to protect
 against these attacks:
+	Use a different CA.
 
 c) A discussion of what, if anything, Governor can do to protect against these
 attacks:
+	Re-write the client code to properly check the CN of the certificate before accepting it. Or just use someone
+		elses code.
 
 d) A discussion of what, if anything, budget-certs-r-us.biz can do to protect
 against these attacks:
+	Do some kind of sanity check before signing certificates.
