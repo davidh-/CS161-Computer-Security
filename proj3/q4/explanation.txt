@@ -1,0 +1,12 @@
+a) A description of the procedure you used to obtain the secret:
+	First step was the create a fake certificate using the Ditipwntar files with our own private key. Then 
+	we needed to write pcap_tool to intercept the governor's DNS request and use it to form a malicious response.
+	The response we send points him at our local server, which does the rest of the work in stealing his password.
+
+b) A discussion of whether there are any mechanisms or protocols Governor could
+have used to defend himself against your attack. If so, explain why your attack
+wouldn’t work when using these. If not, discuss the implications of this attack
+for the use of TLS in the Internet today:
+	The only thing I he could do is know the IP before hand or circumvent DNS somehow. Otherwise, No.
+	If we can produce bad certificates and man in the middle attack his wireless connection, he's hosed.
+	This emphasizes the importance of securing your local network, as well as having CA's we can trust.

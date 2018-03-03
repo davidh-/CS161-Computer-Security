@@ -1,0 +1,14 @@
+a) A description of the procedure you used to obtain the secret:
+	Step 1: Configure WireShark to with the provided private key for any IP on port 443 using http.
+	Step 2: Open the captured packets from Neo with WireShark.
+	Step 3: Read the now decrytped HTTP packet containing the secret.
+b) A list of cryptographic algorithms that were used for this TLS connection. For
+each algorithm, describe in one sentence its use in the protocol:
+	Cipher Suite Packet Contents: TLS_RSA_WITH_AES_256_GCM_SHA384 (0x009d)
+		TLS RSA with AES 256: To intiate the handshake and authenticate the server.
+		GCM SHA384: For encryption after the handshake. 
+c) A discussion of whether there was any technical way by which you could have
+been prevented from decrypting the conversation even though you have obtained
+the private key. If so, briefly describe the technical approach. If not,
+explain why no such approach is feasible: 
+	They could have used Diffe-Hellman instead of RSA to achieve forward secrecy, and thus prevented us from decrypting the conversation later.

